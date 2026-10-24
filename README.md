@@ -1,4 +1,4 @@
-# PUMP for the Digitakt
+# PUMP for Digitakt
 
 An SP-303 Vinyl Sim-style master compressor for the **Elektron Digitakt mk1**, as an
 [elekloader](https://github.com/irpina/elekloader) mod (id `pump-dt`), in place of the Digitakt's stock
@@ -8,19 +8,20 @@ master pages and is on every output: main outs, headphones and USB.
 
 By Robbie (designed and tested on a Digitakt mk1, OS 1.54). GPL-2.0-or-later.
 
-For the **Digitone mk1**, see [digitone-pump](https://github.com/ClaidArremer/digitone-pump): the same
-compressor and page, on a master page of its own.
+**This is the Digitakt version.** For the **Digitone mk1**, use [PUMP for Digitone](https://github.com/ClaidArremer/digitone-pump)
+instead: the same compressor and page, on a master page of its own. The files here do not run on a Digitone,
+and the Digitone's do not run on a Digitakt.
 
 ![The PUMP page (drawn here on the Digitone; the Digitakt's is the same)](docs/pump-page.gif)
 
-> Unofficial and unsupported. Flashing modified firmware is at your own risk; the stock OS always
+> Unofficial and unsupported. Flashing modified firmware is at your own risk; the stock Digitakt OS always
 > recovers the unit (send the stock .syx from the boot menu).
 
 ## What you need
 
 | | |
 |---|---|
-| Unit | Digitakt mk1 |
+| Unit | **Digitakt mk1** (not the Digitakt II) |
 | OS | **1.54** (tested). A 1.53 build is included, untested |
 | Mods | elekloader's Digitakt **core 4.1** (its master output and master pages), included here in `elemods/` (the elekloader app does not ship 4.1 yet) |
 
@@ -35,8 +36,8 @@ python -m elekloader.patch --stock Digitakt_OS1.54.syx \
   --mod elemods/core-4.1-os1.54.elemod --mod elemods/pump-dt-1.3-os1.54.elemod --out Digitakt_pump.syx
 ```
 
-It combines with digihealth (its FAST AUDIO too), Digi Mono, DH-101 and machine-pages, and with the LØST LVLS
-boot splash.
+It combines with digihealth (its FAST AUDIO too), Digi Mono, DH-101 and machine-pages, with the LØST LVLS
+boot splash, and with [DIGISNAKE for Digitakt](https://github.com/ClaidArremer/digitakt-digisnake) (tested together on a unit).
 
 ## In place of the stock compressor
 
