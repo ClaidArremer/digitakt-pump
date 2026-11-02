@@ -28,12 +28,12 @@ and the Digitone's do not run on a Digitakt.
 ## Install
 
 In the elekloader app, add both files for your OS from `elemods/`: `core-4.1-os1.54.elemod` and
-`pump-dt-1.3-os1.54.elemod` (or the two `-os1.53` files), build, and send the firmware to the Digitakt.
+`pump-dt-1.4-os1.54.elemod` (or the two `-os1.53` files), build, and send the firmware to the Digitakt.
 From the command line:
 
 ```
 python -m elekloader.patch --stock Digitakt_OS1.54.syx \
-  --mod elemods/core-4.1-os1.54.elemod --mod elemods/pump-dt-1.3-os1.54.elemod --out Digitakt_pump.syx
+  --mod elemods/core-4.1-os1.54.elemod --mod elemods/pump-dt-1.4-os1.54.elemod --out Digitakt_pump.syx
 ```
 
 It combines with digihealth (its FAST AUDIO too), Digi Mono, DH-101 and machine-pages, with the LØST LVLS
@@ -61,24 +61,29 @@ boot splash, and with [DIGISNAKE for Digitakt](https://github.com/ClaidArremer/d
 | A | PMP | PUMP on or off (a smooth fade; off, it costs nothing) |
 | B | ATK | Punch: each hit's first 0–15 ms gets through before the gain comes down |
 | C | OUT | Output level before the limiter: −32 to +6 dB, 0 dB in the middle. Turn down for headroom |
-| D | RAT | Ratio, in eight steps: AUTO (CMP sets it), 2:1, 3:1, 4:1, 6:1, 10:1, 20:1, LIMIT |
+| D | RAT | Ratio, in eight steps, shown as they are: AUT (CMP sets it), 2:1, 3:1, 4:1, 6:1, 10:1, 20:1, LIM |
 | E | CMP | Compression: threshold and make-up (and the ratio, with RAT on AUTO). More is always louder and denser |
-| F | REL | Release: LEVEL (slow, smooth) through GLUE to PUMP (fast, breathing) |
+| F | REL | Release, more is slower (as the stock REL): PUMP (fast, breathing) through GLUE to LEVEL (slow, smooth) |
 | G | WRM | Warmth: drive into a soft saturator, peaks held. Louder and grittier as it rises |
 | H | MIX | Parallel blend of the dry and compressed sound |
 
 - **Turn**: one step a click. **Press a knob and turn**: moves from multiple to multiple of 8 (61, 64, 72 ...).
   **FUNC + turn**: jump to an end.
-- **YES**: swap the turning record for a graph of the last 2.8 s of gain reduction, and back.
+- **YES**: swap the turning record for a graph of the last 2.8 s of gain reduction, and back. **FUNC + YES** is
+  the stock TEMP SAVE, as on the other pages.
 - The record turns once a bar at the sequencer's tempo and stops with it; the tonearm rides in with the
   gain reduction. The **GR** meter shows it in 2 dB segments with a peak tick. 20 frames a second.
 - **CLEAR** (FUNC + held LFO + PLAY): PUMP's defaults, PUMP off.
 - **SETTINGS > GLOBAL FX/MIX > PUMP ANIMATION**: untick it for a still page (the controls only, no record,
   graph or meter).
-- The Digitakt shows no drop-down messages here; the values are on the page.
+- Every change shows the stock drop-down, as the other pages do: *Ratio=4:1*, *Release=96*, *Output Level=-3.5dB*.
 
 Always on while PUMP is: a 30 Hz high-pass in the compressor's detector, so sub-bass you cannot hear does
 not drive the pump (the output keeps it), and a soft limiter after OUT that holds peaks under 0 dBFS.
+
+## Changes
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## CPU
 

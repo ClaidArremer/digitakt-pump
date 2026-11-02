@@ -10,11 +10,14 @@
  * compressor in pump.c runs at the master output instead.
  *
  *   A = on/off, B = ATK (punch), C = OUT (level, in dB), D = RAT (ratio:
- *   AUTO, 2:1, 3:1, 4:1, 6:1, 10:1, 20:1, LIMIT); E = CMP, F = REL (LEVEL /
- *   GLUE / PUMP), G = WRM, H = MIX.
+ *   AUTO, 2:1, 3:1, 4:1, 6:1, 10:1, 20:1, LIMIT); E = CMP, F = REL (more is
+ *   slower, as the stock knob: PUMP / GLUE / LEVEL; from 1.4 the knob reads
+ *   the other way from 1.3's, and patterns saved before sound as they did),
+ *   G = WRM, H = MIX. A change shows in the stock drop-down ("Ratio=4:1").
  *   Press a knob and turn it to move in 8s; FUNC + turn jumps to an end.
- *   YES: the record or the gain-reduction graph. CLEAR (FUNC + held LFO +
- *   PLAY): back to the defaults, PUMP off.
+ *   YES: the record or the gain-reduction graph; FUNC + YES is the stock's
+ *   (TEMP SAVE). CLEAR (FUNC + held LFO + PLAY): back to the defaults, PUMP
+ *   off.
  *
  * The page: a record that turns a bar a turn at the sequencer's tempo (still
  * when it stops), a tonearm that rides in with the gain reduction, the eight
@@ -391,15 +394,17 @@ static void m_record(void)
     m_ctext(21, 55, "PUMP");
 }
 
-/* RAT as shown: "AUT", the ratio to :1 (whole), "LIM"; the popup in tenths */
-static int pc_rat_tenths(int v)                 /* 20 .. 200 */
+/* RAT as shown: its step's name (digipump_rat_tab's eight), the ratio as
+ * N:1; the drop-down spells AUTO and LIMIT out */
+static const char *const rat_names[8] = { "AUT", "2:1", "3:1", "4:1", "6:1", "10:1", "20:1", "LIM" };
+static const char *const rat_long[8] = { "AUTO", "2:1", "3:1", "4:1", "6:1", "10:1", "20:1", "LIMIT" };
+static int pc_rat_step(int v)
 {
-    int lu = 256 + ((v - 1) * 850) / 125, r = 0;
-    /* 2^(lu/256) * 10, from the 6 dB octaves and a linear fraction: close
-     * enough for a label (the DSP uses the exact table) */
-    int n = lu >> 8, f = lu & 255;
-    r = (10 << n) + (((10 << n) * f) >> 8);
-    return r;
+    int i;
+    for (i = 0; i < 8; i++)
+        if (digipump_rat_tab[i] == v)
+            return i;
+    return 0;
 }
 
 /* OUT in tenths of a dB: 64 = 0, 0.5 dB a step below, 6/63 dB above */
@@ -415,10 +420,12 @@ static void m_cell(int x, int y, const char *lab, int v, int bip)
     char b[6];
     int cx = x + 8;
     m_ctext(cx, y, lab);
-    if (bip == 2) {                                       /* RAT */
-        if (v == 0) { b[0] = 'A'; b[1] = 'U'; b[2] = 'T'; b[3] = 0; }
-        else if (v == 127) { b[0] = 'L'; b[1] = 'I'; b[2] = 'M'; b[3] = 0; }
-        else m_itoa(b, (pc_rat_tenths(v) + 5) / 10);
+    if (bip == 2) {                                       /* RAT: its step's name */
+        const char *r = rat_names[pc_rat_step(v)];
+        int i;
+        for (i = 0; r[i] && i < 5; i++)
+            b[i] = r[i];
+        b[i] = 0;
     } else if (bip) {
         int t = pc_out_tenths(v);                         /* whole dB, rounded */
         m_itoa(b, (t + (t < 0 ? -5 : 5)) / 10);
@@ -445,7 +452,7 @@ static void m_sliders(void)
     m_cell(x0 + 2 * dx, 13, "OUT", digipump_out, 1);
     m_cell(x0 + 3 * dx, 13, "RAT", digipump_rat, 2);
     m_cell(x0, 37, "CMP", digipump_squash, 0);
-    m_cell(x0 + dx, 37, "REL", digipump_pump, 0);
+    m_cell(x0 + dx, 37, "REL", 127 - digipump_pump, 0);  /* the knob: more is slower */
     m_cell(x0 + 2 * dx, 37, "WRM", digipump_warm, 0);
     m_cell(x0 + 3 * dx, 37, "MIX", digipump_mix, 0);
 }
@@ -469,7 +476,7 @@ static void m_graph(void)
     m_text(x, 55, "CMP"); x += m_w("CMP") + 3;
     m_itoa(b, digipump_squash); m_text(x, 55, b); x += m_w(b) + 6;
     m_text(x, 55, "REL"); x += m_w("REL") + 3;
-    m_itoa(b, digipump_pump); m_text(x, 55, b); x += m_w(b) + 6;
+    m_itoa(b, 127 - digipump_pump); m_text(x, 55, b); x += m_w(b) + 6;
     m_text(x, 55, "WRM"); x += m_w("WRM") + 3;
     m_itoa(b, digipump_warm); m_text(x, 55, b);
 }
@@ -511,7 +518,7 @@ static void pumpdt_draw(void *view, void *bmp)
         fw_textf(bmp, fw_font5, 2, 40, -1, "PUMP %s  ATK %d OUT %d RAT %d",
                  digipump_on ? "ON" : "OFF", digipump_atk, digipump_out, digipump_rat);
         fw_textf(bmp, fw_font5, 2, 24, -1, "CMP %d REL %d WRM %d MIX %d",
-                 digipump_squash, digipump_pump, digipump_warm, digipump_mix);
+                 digipump_squash, 127 - digipump_pump, digipump_warm, digipump_mix);
         return;
     }
     dg_fb = *(unsigned char **)(b + 16);
@@ -587,6 +594,29 @@ static int pc_steps(int id, int d)
     return st;
 }
 
+/* The stock drop-down ("Name=value", as the stock pages show a knob's change):
+ * the firmware's routine f(obj, fmt, ...) (DT_POPUP_ADDR), whose object is the
+ * view's +108 (measured in digiemu on OS 1.53: the master view's is the one
+ * the TRIG page passes) */
+#define DT_VIEW_POPUP 108
+static void pc_pop(void *view, const char *name, const char *val)
+{
+#ifdef DT_POPUP_ADDR
+    uint32_t o = *(uint32_t *)((char *)view + DT_VIEW_POPUP);
+    if (o >= 0x40000000u && o < 0x48000000u)
+        ((void (*)(void *, const char *, ...))DT_POPUP_ADDR)((void *)o, "%s=%s", name, val);
+#else
+    (void)view; (void)name; (void)val;
+#endif
+}
+
+static void pc_pop_num(void *view, const char *name, int v)
+{
+    char b[8];
+    m_itoa(b, v);
+    pc_pop(view, name, b);
+}
+
 /* enc(view, event): +12 knob 1-8 = A-H (9 LEVEL), +16 the turn, +20 set while
  * the knob is held down */
 static int32_t pumpdt_enc(void *view, void *ev)
@@ -624,17 +654,43 @@ static int32_t pumpdt_enc(void *view, void *ev)
         if (d < -7) d = -7;
         pc_set(view, CP_RAT, clampi(digipump_stored[CP_RAT - CP_THR] + d, 0, 7));
         digipump_rat = digipump_rat_tab[digipump_stored[CP_RAT - CP_THR] & 7];
+        pc_pop(view, "Ratio", rat_long[digipump_stored[CP_RAT - CP_THR] & 7]);
         break;
+    case 6: {                                   /* REL: the knob is 127 - the stored */
+        int x = pc_move(127 - digipump_pump, d);  /* (stored as 1.3 kept it, so a
+                                                   * saved pattern sounds the same) */
+        pc_set(view, CP_REL, 127 - x);
+        digipump_pump = 127 - x;
+        pc_pop_num(view, "Release", x);
+        break;
+    }
     default: {
         static const unsigned char ids[9] = { 0, 0, CP_ATK, CP_SCF, 0, CP_THR, CP_REL, CP_MUP, CP_MIX };
         static int *const vals[9] = { 0, 0, &digipump_atk, &digipump_out, 0, &digipump_squash,
                                       &digipump_pump, &digipump_warm, &digipump_mix };
+        static const char *const names[9] = { 0, 0, "Attack Punch", "Output Level", 0, "Compression",
+                                              "Release", "Warmth", "Mix" };
         int x = pc_move(*vals[id], d);
         pc_set(view, ids[id], x);
         *vals[id] = x;                          /* shown at once; the render confirms */
+        if (id == 3) {                          /* OUT: in dB, to a tenth */
+            char b[12];
+            int t = pc_out_tenths(x), a = t < 0 ? -t : t, n = 0;
+            b[n++] = t < 0 ? '-' : '+';
+            if (a >= 100) b[n++] = (char)('0' + a / 100);
+            b[n++] = (char)('0' + (a / 10) % 10);
+            b[n++] = '.';
+            b[n++] = (char)('0' + a % 10);
+            b[n++] = 'd'; b[n++] = 'B'; b[n] = 0;
+            pc_pop(view, names[id], b);
+        } else {
+            pc_pop_num(view, names[id], x);
+        }
         break;
     }
     }
+    if (id == 1)
+        pc_pop(view, "Pump", digipump_on ? "ON" : "OFF");
     fw_invalidate(view);
     return 1;
 }
@@ -658,8 +714,8 @@ static int32_t pumpdt_key(void *view, void *ev)
 {
     int id = *(int32_t *)((char *)ev + 12);
     int flags = *(int32_t *)((char *)ev + 16);
-    if (id != DT_K_YES)
-        return 0;
+    if (id != DT_K_YES || (flags & 2) || pc_func)
+        return 0;                               /* FUNC + YES: the stock's (TEMP SAVE) */
     if ((flags & 1) && !(flags & 0x10) && !(flags & 8) && !pc_still()) {
         pc_graph = !pc_graph;
         pc_due = 0;
